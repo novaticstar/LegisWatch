@@ -363,10 +363,9 @@
                             <div class="stats-number" id="searchQuery">-</div>
                             <div class="stats-label">Search Query</div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
+                    </div>                    <div class="col-md-4">
                         <div class="stats-card">
-                            <div class="stats-number" id="searchType">-</div>
+                            <div class="stats-number" id="searchTypeDisplay">-</div>
                             <div class="stats-label">Search Type</div>
                         </div>
                     </div>
@@ -517,13 +516,12 @@
         function hideLoading() {
             loadingSpinner.style.display = 'none';
             resultsSection.style.display = 'block';
-        }
-
-        function displayResults(data) {
+        }        function displayResults(data) {
             // Update statistics
             document.getElementById('billCount').textContent = data.count;
-            document.getElementById('searchQuery').textContent = data.query;
-            document.getElementById('searchType').textContent = data.search_type === 'keyword' ? 'Topic' : 'State';
+            const queryText = data.query.length > 20 ? data.query.substring(0, 20) + '...' : data.query;
+            document.getElementById('searchQuery').textContent = queryText;
+            document.getElementById('searchTypeDisplay').textContent = data.search_type === 'keyword' ? 'Topic' : 'State';
 
             if (data.bills.length === 0) {
                 billsContainer.innerHTML = `

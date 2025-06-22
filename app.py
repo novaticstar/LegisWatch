@@ -39,14 +39,17 @@ class BillTracker:
     def __init__(self):
         self.api_key = CONGRESS_API_KEY
         self.headers = {
-            'X-API-Key': self.api_key
-        } if self.api_key else {}
+            'X-API-Key': self.api_key        } if self.api_key else {}
         # Current Congress session (118th Congress: 2023-2025)
         self.current_congress = 118
     
     def search_bills_by_keyword(self, keyword, limit=20):
         """Search for bills by keyword using Congress.gov API"""
         try:
+            if not self.api_key:
+                logger.info("No Congress API key provided, using enhanced mock data")
+                return self._get_mock_bills(keyword)
+            
             # Congress.gov API endpoint for bill search
             url = f"{CONGRESS_API_BASE_URL}/bill/{self.current_congress}"
             params = {
@@ -83,10 +86,17 @@ class BillTracker:
     def search_bills_by_state(self, state, limit=20):
         """Search for bills by sponsor's state using Congress.gov API"""
         try:
+            logger.info(f"Searching for bills from state: {state}")
+            
+            if not self.api_key:
+                logger.info("No Congress API key provided, using enhanced mock data for state search")
+                return self._get_mock_bills_by_state(state)
+            
             # Get current Congress members from the state
             members = self._get_members_by_state(state)
             
             if not members:
+                logger.warning(f"No members found for state: {state}, using mock data")
                 return self._get_mock_bills_by_state(state)
             
             # Get bills sponsored by these members
@@ -472,8 +482,8 @@ class BillTracker:
                 'summary': bill['summary'],
                 'introduced_date': bill['introducedDate'],
                 'sponsor': bill['sponsor'],
-                'congress_url': self._generate_congress_url(bill['type'], bill['number']),
-                'bill_type': bill['type'],                'number': bill['number'],
+                'congress_url': self._generate_congress_url(bill['type'], bill['number']),                'bill_type': bill['type'],
+                'number': bill['number'],
                 'updateDate': bill['introducedDate']
             }
             formatted_bills.append(formatted_bill)
@@ -484,26 +494,99 @@ class BillTracker:
         """Return enhanced mock bill data by state with realistic Congress.gov URLs"""
         state_abbr = self._normalize_state(state)
         if not state_abbr:
-            state_abbr = state.upper()
+            state_abbr = state.upper()[:2]
         
-        state_bills = [
-            {
-                'type': 'HR',
-                'number': f'{abs(hash(state_abbr)) % 9000 + 1000}',  # Generate consistent number based on state
-                'title': f'{state} Economic Development and Infrastructure Act',
-                'summary': f'A bill to promote economic development and improve infrastructure in the state of {state}. Includes funding for transportation, broadband expansion, and job training programs specific to {state}\'s needs.',
-                'sponsor': f'Rep. [Representative Name] (D-{state_abbr})',
-                'introducedDate': '2024-12-19'
-            },
-            {
-                'type': 'S',
-                'number': f'{abs(hash(state_abbr + "senate")) % 2000 + 100}',
-                'title': f'{state} Small Business Support Act of 2024',
-                'summary': f'Legislation to support small businesses and entrepreneurs in {state}. Provides tax incentives, grants, and loan guarantees for small business development in rural and urban areas of {state}.',
-                'sponsor': f'Sen. [Senator Name] (R-{state_abbr})',
-                'introducedDate': '2024-12-17'
-            }
-        ]
+        logger.info(f"Generating mock bills for state: {state} (abbr: {state_abbr})")
+        
+        # State-specific bill data
+        state_specific_bills = {
+            'VA': [
+                {
+                    'type': 'HR',
+                    'number': '2847',
+                    'title': 'Virginia Military Installation Protection Act',
+                    'summary': 'A bill to protect military installations in Virginia from encroachment and ensure continued operations at Norfolk Naval Station, Fort Belvoir, and other key defense facilities. Includes provisions for land use restrictions and federal coordination.',
+                    'sponsor': 'Rep. Jennifer Wexton (D-VA)',
+                    'introducedDate': '2024-12-18'
+                },
+                {
+                    'type': 'S',
+                    'number': '1456',
+                    'title': 'Chesapeake Bay Restoration Enhancement Act',
+                    'summary': 'Legislation to enhance the restoration of the Chesapeake Bay watershed, with special focus on Virginia waterways. Provides federal funding for environmental restoration, agricultural best practices, and water quality monitoring.',
+                    'sponsor': 'Sen. Mark Warner (D-VA)',
+                    'introducedDate': '2024-12-15'
+                },
+                {
+                    'type': 'HR',
+                    'number': '3912',
+                    'title': 'Virginia Tech Corridor Innovation Act',
+                    'summary': 'A bill to establish technology innovation zones in Northern Virginia and support high-tech industry development. Includes tax incentives for technology companies and funding for STEM education programs.',
+                    'sponsor': 'Rep. Don Beyer (D-VA)',
+                    'introducedDate': '2024-12-12'
+                }
+            ],
+            'CA': [
+                {
+                    'type': 'HR',
+                    'number': '4321',
+                    'title': 'California Wildfire Prevention and Recovery Act',
+                    'summary': 'Comprehensive legislation to address wildfire prevention, response, and recovery in California. Includes funding for forest management, firefighting resources, and community resilience programs.',
+                    'sponsor': 'Rep. Nancy Pelosi (D-CA)',
+                    'introducedDate': '2024-12-16'
+                },
+                {
+                    'type': 'S',
+                    'number': '2187',
+                    'title': 'California High-Speed Rail Completion Act',
+                    'summary': 'A bill to provide federal funding for the completion of California\'s high-speed rail system, connecting San Francisco to Los Angeles with stops in Central Valley communities.',
+                    'sponsor': 'Sen. Dianne Feinstein (D-CA)',
+                    'introducedDate': '2024-12-14'
+                }
+            ],
+            'TX': [
+                {
+                    'type': 'HR',
+                    'number': '5678',
+                    'title': 'Texas Border Security Enhancement Act',
+                    'summary': 'Legislation to enhance border security infrastructure along the Texas-Mexico border. Includes funding for technology upgrades, personnel, and coordination with state and local authorities.',
+                    'sponsor': 'Rep. Dan Crenshaw (R-TX)',
+                    'introducedDate': '2024-12-17'
+                },
+                {
+                    'type': 'S',
+                    'number': '3456',
+                    'title': 'Texas Energy Independence Act',
+                    'summary': 'A bill to support Texas energy production including oil, natural gas, and renewable energy sources. Includes provisions for grid reliability and energy export capabilities.',
+                    'sponsor': 'Sen. Ted Cruz (R-TX)',
+                    'introducedDate': '2024-12-13'
+                }
+            ]
+        }
+        
+        # Get state-specific bills or generate generic ones
+        if state_abbr in state_specific_bills:
+            state_bills = state_specific_bills[state_abbr]
+        else:
+            # Generate generic bills for other states
+            state_bills = [
+                {
+                    'type': 'HR',
+                    'number': f'{abs(hash(state_abbr)) % 9000 + 1000}',
+                    'title': f'{state} Economic Development and Infrastructure Act',
+                    'summary': f'A bill to promote economic development and improve infrastructure in the state of {state}. Includes funding for transportation, broadband expansion, and job training programs specific to {state}\'s needs.',
+                    'sponsor': f'Rep. [State Representative] (D-{state_abbr})',
+                    'introducedDate': '2024-12-19'
+                },
+                {
+                    'type': 'S',
+                    'number': f'{abs(hash(state_abbr + "senate")) % 2000 + 100}',
+                    'title': f'{state} Small Business Support Act of 2024',
+                    'summary': f'Legislation to support small businesses and entrepreneurs in {state}. Provides tax incentives, grants, and loan guarantees for small business development in rural and urban areas of {state}.',
+                    'sponsor': f'Sen. [State Senator] (R-{state_abbr})',
+                    'introducedDate': '2024-12-17'
+                }
+            ]
         
         # Format bills for frontend
         formatted_bills = []
@@ -521,6 +604,7 @@ class BillTracker:
             }
             formatted_bills.append(formatted_bill)
         
+        logger.info(f"Generated {len(formatted_bills)} mock bills for {state}")
         return formatted_bills
 
 # Initialize bill tracker
@@ -531,7 +615,14 @@ def get_llm_summary(bill_text, topic="general"):
     """Get AI summary of bill using HuggingFace API"""
     try:
         if not HUGGINGFACE_API_KEY:
+            logger.warning("HuggingFace API key not provided. Skipping AI summary.")
             return f"AI Summary not available (API key required). This bill relates to {topic}."
+        
+        if not bill_text or bill_text.strip() == 'No summary available':
+            logger.warning(f"No bill text provided for AI summary. Topic: {topic}")
+            return f"Cannot generate AI summary - no bill text available. This bill relates to {topic}."
+        
+        logger.info(f"Generating AI summary for topic: {topic}")
         
         headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
         
@@ -557,7 +648,11 @@ def get_llm_summary(bill_text, topic="general"):
         if response.status_code == 200:
             result = response.json()
             if isinstance(result, list) and len(result) > 0:
-                return result[0].get("summary_text", "Summary not available")
+                summary = result[0].get("summary_text", "Summary not available")
+                logger.info(f"AI summary generated successfully for topic: {topic}")
+                return summary
+            else:
+                logger.warning(f"HuggingFace API returned empty result for topic: {topic}")
         else:
             logger.error(
                 f"HuggingFace API error {response.status_code}: {response.text}"
