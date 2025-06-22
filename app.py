@@ -546,15 +546,27 @@ def get_llm_summary(bill_text, topic="general"):
             }
         }
         
-        response = requests.post(HUGGINGFACE_API_URL, headers=headers, json=payload, timeout=15)
-        
+        response = requests.post(
+            HUGGINGFACE_API_URL,
+            headers=headers,
+            json=payload,
+            timeout=15,
+        )
+
         if response.status_code == 200:
             result = response.json()
             if isinstance(result, list) and len(result) > 0:
-                return result[0].get('summary_text', 'Summary not available')
-        
+                return result[0].get("summary_text", "Summary not available")
+        else:
+            logger.error(
+                f"HuggingFace API error {response.status_code}: {response.text}"
+            )
+
         # Fallback summary
-        return f"This bill addresses {topic}-related policies and may impact regulatory compliance for businesses."
+        return (
+            f"This bill addresses {topic}-related policies and may impact "
+            "regulatory compliance for businesses."
+        )
         
     except Exception as e:
         logger.error(f"LLM summary error: {e}")
