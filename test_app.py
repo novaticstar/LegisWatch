@@ -44,7 +44,12 @@ def test_bill_tracker():
         bills = tracker.search_bills_by_state("CA", limit=5)
         assert isinstance(bills, list), "search_bills_by_state should return a list"
         print(f"✓ State search returned {len(bills)} bills")
-        
+
+        # Test state normalization
+        state_abbr = tracker._normalize_state("California")
+        assert state_abbr == "CA", "_normalize_state should return state abbreviation"
+        print("✓ State normalization working")
+
         return True
     except Exception as e:
         print(f"✗ BillTracker test failed: {e}")
