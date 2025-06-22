@@ -356,7 +356,8 @@ class BillTracker:
         if len(state_input) == 2 and state_input.upper() in state_mapping.values():
             return state_input.upper()
         
-        # If it's a full state name        return state_mapping.get(state_lower, state_input.upper() if len(state_input) == 2 else None)
+        # If it's a full state name
+        return state_mapping.get(state_lower, state_input.upper() if len(state_input) == 2 else None)
     
     def _get_mock_bills(self, keyword):
         """Return enhanced mock bill data with realistic Congress.gov URLs"""
