@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegisWatch - U.S. Bill Tracker</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            max-width: 1200px;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .search-section {
+            padding: 2rem;
+            background: white;
+        }
+
+        .search-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--warning-color), #d68910);
+            border: none;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #229954);
+            border: none;
+            border-radius: 8px;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem 1rem;
+        }
+
+        .results-section {
+            padding: 0 2rem 2rem;
+        }
+
+        .bill-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .bill-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .bill-header {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 1.25rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .bill-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .bill-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .bill-body {
+            padding: 1.25rem;
+        }
+
+        .bill-summary {
+            color: #495057;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .ai-summary {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin-top: 1rem;
+        }
+
+        .ai-summary-title {
+            font-weight: 600;
+            color: var(--success-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bill-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .bill-badge {
+            background: var(--secondary-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .error-alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .stats-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .footer {
+            background: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+        }
+
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .main-container {
+                margin: 1rem;
+                border-radius: 10px;
+            }
+            
+            .search-section, .results-section {
+                padding: 1.5rem;
+            }
+            
+            .bill-actions {
+                flex-direction: column;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header Section -->
+            <div class="header-section">
+                <h1><i class="fas fa-gavel me-3"></i>LegisWatch</h1>
+                <p>Track U.S. legislation in real-time with AI-powered insights</p>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="card search-card">
+                    <div class="card-body">
+                        <form id="searchForm">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="searchQuery" class="form-label fw-bold">
+                                        <i class="fas fa-search me-2"></i>Search Query
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="searchQuery" 
+                                           placeholder="Enter topic (e.g., healthcare, climate) or state (e.g., CA, Texas)"
+                                           required>
+                                    <div class="form-text">
+                                        Search by policy topic, keywords, or U.S. state name/abbreviation
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="searchType" class="form-label fw-bold">
+                                        <i class="fas fa-filter me-2"></i>Search Type
+                                    </label>
+                                    <select class="form-select" id="searchType">
+                                        <option value="keyword">By Topic/Keyword</option>
+                                        <option value="state">By State</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="includeAI">
+                                        <label class="form-check-label fw-bold" for="includeAI">
+                                            <i class="fas fa-robot me-2"></i>Include AI Summaries
+                                        </label>
+                                        <div class="form-text">
+                                            Get AI-powered summaries for business/compliance context
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Search Bills
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="exportBtn" disabled>
+                                    <i class="fas fa-download me-2"></i>Export CSV
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="clearBtn">
+                                    <i class="fas fa-times me-2"></i>Clear Results
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Searching for bills...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <!-- Statistics -->
+                <div class="row mb-4" id="statsRow">
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <div class="stats-number" id="billCount">0</div>
+                            <div class="stats-label">Bills Found</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <div class="stats-number" id="searchQuery">-</div>
+                            <div class="stats-label">Search Query</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <div class="stats-number" id="searchType">-</div>
+                            <div class="stats-label">Search Type</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bills Container -->
+                <div id="billsContainer"></div>
+            </div>
+
+            <!-- Footer -->            <div class="footer">
+                <p class="mb-1">
+                    <strong>LegisWatch</strong> - Built with Flask, Bootstrap & Congress.gov API
+                </p>
+                <p class="mb-0">
+                    <small>
+                        <i class="fas fa-code me-1"></i>
+                        Open source legislative tracking for transparency and civic engagement
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Application state
+        let currentResults = [];
+        let isSearching = false;
+
+        // DOM elements
+        const searchForm = document.getElementById('searchForm');
+        const searchQueryInput = document.getElementById('searchQuery');
+        const searchTypeSelect = document.getElementById('searchType');
+        const includeAICheckbox = document.getElementById('includeAI');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultsSection = document.getElementById('resultsSection');
+        const billsContainer = document.getElementById('billsContainer');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            showWelcomeMessage();
+        });
+
+        function setupEventListeners() {
+            searchForm.addEventListener('submit', handleSearch);
+            exportBtn.addEventListener('click', handleExport);
+            clearBtn.addEventListener('click', clearResults);
+            
+            // Auto-search on type change for better UX
+            searchTypeSelect.addEventListener('change', function() {
+                if (searchQueryInput.value.trim()) {
+                    handleSearch({ preventDefault: () => {} });
+                }
+            });
+        }
+
+        function showWelcomeMessage() {
+            billsContainer.innerHTML = `
+                <div class="card bill-card fade-in">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-search fa-4x text-primary mb-3"></i>
+                        <h3 class="text-primary">Welcome to LegisWatch</h3>
+                        <p class="text-muted mb-4">
+                            Search for U.S. bills by topic or state to get started. 
+                            Use AI summaries to understand complex legislation quickly.
+                        </p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-lightbulb text-warning me-2"></i>Example Searches</h5>
+                                <ul class="list-unstyled text-start">
+                                    <li><strong>By Topic:</strong> climate change, healthcare, education</li>
+                                    <li><strong>By State:</strong> California, TX, New York</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-star text-success me-2"></i>Features</h5>
+                                <ul class="list-unstyled text-start">
+                                    <li>✓ Real-time bill tracking</li>
+                                    <li>✓ AI-powered summaries</li>
+                                    <li>✓ CSV export functionality</li>
+                                    <li>✓ Mobile-responsive design</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultsSection.style.display = 'block';
+        }
+
+        async function handleSearch(event) {
+            event.preventDefault();
+            
+            if (isSearching) return;
+            
+            const query = searchQueryInput.value.trim();
+            if (!query) {
+                showError('Please enter a search query');
+                return;
+            }
+
+            isSearching = true;
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        type: searchTypeSelect.value,
+                        include_ai: includeAICheckbox.checked
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentResults = data.bills;
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Search failed');
+                }
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('Network error occurred. Please try again.');
+            } finally {
+                isSearching = false;
+                hideLoading();
+            }
+        }
+
+        function showLoading() {
+            loadingSpinner.style.display = 'block';
+            resultsSection.style.display = 'none';
+            exportBtn.disabled = true;
+        }
+
+        function hideLoading() {
+            loadingSpinner.style.display = 'none';
+            resultsSection.style.display = 'block';
+        }
+
+        function displayResults(data) {
+            // Update statistics
+            document.getElementById('billCount').textContent = data.count;
+            document.getElementById('searchQuery').textContent = data.query;
+            document.getElementById('searchType').textContent = data.search_type === 'keyword' ? 'Topic' : 'State';
+
+            if (data.bills.length === 0) {
+                billsContainer.innerHTML = `
+                    <div class="card bill-card fade-in">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-search-minus fa-4x text-warning mb-3"></i>
+                            <h3 class="text-warning">No Bills Found</h3>
+                            <p class="text-muted">
+                                No bills found for "${data.query}". Try different keywords or check the spelling.
+                            </p>
+                            <button class="btn btn-primary" onclick="searchQueryInput.focus()">
+                                <i class="fas fa-edit me-2"></i>Try Another Search
+                            </button>
+                        </div>
+                    </div>
+                `;
+                exportBtn.disabled = true;
+                return;
+            }
+
+            // Display bills
+            let billsHTML = '';
+            data.bills.forEach((bill, index) => {
+                billsHTML += createBillCard(bill, index);
+            });
+
+            billsContainer.innerHTML = billsHTML;
+            exportBtn.disabled = false;
+
+            // Add fade-in animation
+            setTimeout(() => {
+                document.querySelectorAll('.bill-card').forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('fade-in');
+                    }, index * 100);
+                });
+            }, 50);
+        }
+
+        function createBillCard(bill, index) {
+            const formattedDate = formatDate(bill.introduced_date);
+            const aiSummaryHTML = bill.ai_summary ? `
+                <div class="ai-summary">
+                    <div class="ai-summary-title">
+                        <i class="fas fa-robot"></i>
+                        AI Business Impact Summary
+                    </div>
+                    <div>${bill.ai_summary}</div>
+                </div>
+            ` : '';
+
+            return `
+                <div class="card bill-card" style="animation-delay: ${index * 0.1}s">
+                    <div class="bill-header">
+                        <h3 class="bill-title">${bill.title}</h3>
+                        <div class="bill-meta">
+                            <span class="bill-badge me-2">${bill.bill_type} ${bill.number}</span>
+                            <i class="fas fa-calendar me-1"></i>${formattedDate}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-user me-1"></i>${bill.sponsor}
+                        </div>
+                    </div>
+                    <div class="bill-body">
+                        <div class="bill-summary">${bill.summary}</div>
+                        ${aiSummaryHTML}
+                        <div class="bill-actions mt-3">
+                            <a href="${bill.congress_url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i>View on Congress.gov
+                            </a>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyBillInfo('${bill.id}')">
+                                <i class="fas fa-copy me-1"></i>Copy Info
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString || dateString === 'Unknown') return 'Date unknown';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        function copyBillInfo(billId) {
+            const bill = currentResults.find(b => b.id === billId);
+            if (!bill) return;
+
+            const text = `${bill.title}\nIntroduced: ${bill.introduced_date}\nSponsor: ${bill.sponsor}\nSummary: ${bill.summary}\nURL: ${bill.congress_url}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Bill information copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        async function handleExport() {
+            if (currentResults.length === 0) return;
+
+            try {
+                const response = await fetch('/api/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bills: currentResults
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `legiswatch_results_${new Date().toISOString().slice(0, 10)}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    showToast('Results exported successfully!', 'success');
+                } else {
+                    showToast('Export failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Export failed. Please try again.', 'error');
+            }
+        }
+
+        function clearResults() {
+            currentResults = [];
+            searchQueryInput.value = '';
+            includeAICheckbox.checked = false;
+            exportBtn.disabled = true;
+            showWelcomeMessage();
+            searchQueryInput.focus();
+        }
+
+        function showError(message) {
+            billsContainer.innerHTML = `
+                <div class="alert alert-danger error-alert fade-in" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+            resultsSection.style.display = 'block';
+        }
+
+        function showToast(message, type = 'info') {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : 'success'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.zIndex = '9999';
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+            
+            // Remove toast after it's hidden
+            toast.addEventListener('hidden.bs.toast', () => {
+                document.body.removeChild(toast);
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case '/':
+                        event.preventDefault();
+                        searchQueryInput.focus();
+                        break;
+                    case 'Enter':
+                        if (event.target !== searchQueryInput) {
+                            event.preventDefault();
+                            handleSearch({ preventDefault: () => {} });
+                        }
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
